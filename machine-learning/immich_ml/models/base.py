@@ -104,7 +104,7 @@ class InferenceModel(ABC):
             self.cache_dir.unlink()
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-    def _make_session(self, model_path: Path) -> ModelSession:
+    def _make_session(self, model_path: Path, providers=None) -> ModelSession:
         if not model_path.is_file():
             raise FileNotFoundError(f"Model file not found: {model_path}")
 
@@ -112,7 +112,10 @@ class InferenceModel(ABC):
             case ".armnn":
                 session: ModelSession = AnnSession(model_path)
             case ".onnx":
-                session = OrtSession(model_path)
+                if providers is None:
+                    session = OrtSession(model_path)
+                else:
+                    session = OrtSession(model_path, providers=providers)
             case ".rknn":
                 session = rknn.RknnSession(model_path)
             case _:

@@ -56,7 +56,10 @@ class TextRecognizer(InferenceModel):
 
     def _load(self) -> ModelSession:
         # TODO: support other runtimes
-        session = OrtSession(self.model_path)
+        # Constantly changing input/batch size nature of text recognition 
+        # triggers repeated model recompilation for non-cpu EP's
+        # Tested with openVINO and MigraphX as backends, both benefit greatly
+        session = OrtSession(model=self.model_path, providers=["CPUExecutionProvider"])
         max_batch_size = settings.max_batch_size and settings.max_batch_size.ocr
         self.model = RapidTextRecognizer(
             OcrOptions(
